@@ -6,7 +6,7 @@
 
 -The system starts according to the schedule - once a minute.
 
--The program reads all Java vacancies and writes them to the database.
+-The program reads all Java vacancies from website and writes them to the database.
 
 -Access to the interface is via the REST API.
 
