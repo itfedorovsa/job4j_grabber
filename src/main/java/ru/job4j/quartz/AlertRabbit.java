@@ -13,7 +13,6 @@ import static org.quartz.TriggerBuilder.*;
 import static org.quartz.SimpleScheduleBuilder.*;
 
 public class AlertRabbit {
-    private static Properties properties;
 
     private static Properties getRabbitProperties() {
         Properties properties = new Properties();
@@ -25,8 +24,7 @@ public class AlertRabbit {
         return properties;
     }
 
-    private static Connection getConnection() throws ClassNotFoundException, SQLException {
-        properties = getRabbitProperties();
+    private static Connection getConnection(Properties properties) throws ClassNotFoundException, SQLException {
         Class.forName(properties.getProperty("jdbc.driver"));
         String url = properties.getProperty("jdbc.url");
         String login = properties.getProperty("jdbc.username");
@@ -35,7 +33,8 @@ public class AlertRabbit {
     }
 
     public static void main(String[] args) {
-        try (Connection con = AlertRabbit.getConnection()) {
+        Properties properties = getRabbitProperties();
+        try (Connection con = AlertRabbit.getConnection(properties)) {
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
             scheduler.start();
             JobDataMap data = new JobDataMap();
