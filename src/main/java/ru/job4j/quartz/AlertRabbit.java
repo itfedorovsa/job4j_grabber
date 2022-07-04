@@ -23,13 +23,13 @@ public class AlertRabbit {
     }
 
     public static void main(String[] args) {
-        int value = Integer.parseInt((String) getRabbitProperties().get("rabbit.interval"));
+        Properties properties = getRabbitProperties();
         try {
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
             scheduler.start();
             JobDetail job = newJob(Rabbit.class).build();
             SimpleScheduleBuilder times = simpleSchedule()
-                    .withIntervalInSeconds(value)
+                    .withIntervalInSeconds(Integer.parseInt(properties.getProperty("rabbit.interval")))
                     .repeatForever();
             Trigger trigger = newTrigger()
                     .startNow()
