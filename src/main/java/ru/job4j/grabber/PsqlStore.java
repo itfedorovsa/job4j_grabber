@@ -37,7 +37,7 @@ public class PsqlStore implements Store, AutoCloseable {
     @Override
     public void save(Post post) {
         try (PreparedStatement statement = cnn.prepareStatement(
-                "insert into post (name, text, link, created) values (?, ?, ?, ?);",
+                "insert into post (name, link, text, created) values (?, ?, ?, ?);",
         PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, post.getTitle());
             statement.setString(2, post.getLink());
@@ -63,8 +63,8 @@ public class PsqlStore implements Store, AutoCloseable {
                     list.add(new Post(
                             rslSet.getInt("id"),
                             rslSet.getString("name"),
-                            rslSet.getString("text"),
                             rslSet.getString("link"),
+                            rslSet.getString("text"),
                             rslSet.getTimestamp("created").toLocalDateTime()
                     ));
                 }
@@ -85,8 +85,8 @@ public class PsqlStore implements Store, AutoCloseable {
                     return new Post(
                             rslSet.getInt("id"),
                             rslSet.getString("name"),
-                            rslSet.getString("text"),
                             rslSet.getString("link"),
+                            rslSet.getString("text"),
                             rslSet.getTimestamp("created").toLocalDateTime()
                     );
                 }
