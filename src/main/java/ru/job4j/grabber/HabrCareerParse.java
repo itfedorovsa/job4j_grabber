@@ -21,6 +21,8 @@ public class HabrCareerParse implements Parse {
 
     private final DateTimeParser dateTimeParser;
 
+    public static final int PAGE_COUNT = 5;
+
     public HabrCareerParse(DateTimeParser dateTimeParser) {
         this.dateTimeParser = dateTimeParser;
     }
@@ -37,31 +39,32 @@ public class HabrCareerParse implements Parse {
         return "Description is missing";
     }
 
+    private Post parsePost(Element element) {
+        Element titleElement = element.select(".vacancy-card__title").first();
+        Element linkElement = titleElement.child(0);
+        Element dateTimeElement = element.select(".vacancy-card__date").first();
+        Element dateTimeLink = dateTimeElement.child(0);
+        String vacancyName = titleElement.text();
+        String postLink = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
+        String dateTime = String.format("%s", dateTimeLink.attr("datetime"));
+        LocalDateTime ldt = dateTimeParser.parse(dateTime);
+        HabrCareerParse habr = new HabrCareerParse(dateTimeParser);
+        String description = habr.retrieveDescription(postLink);
+        return new Post(vacancyName, postLink, description, ldt);
+    }
+
     @Override
     public List<Post> list(String link) {
         List<Post> list = new ArrayList<>();
         try {
-            for (int page = 1; page <= 5; page++) {
+            for (int page = 1; page <= PAGE_COUNT; page++) {
                 String currentPage = String.format("%s%s", link, page);
                 Connection connection = Jsoup.connect(currentPage);
                 Document document = connection.get();
                 Elements rows = document.select(".vacancy-card__inner");
-                rows.forEach(row -> {
-                    Element titleElement = row.select(".vacancy-card__title").first();
-                    Element linkElement = titleElement.child(0);
-                    Element dateTimeElement = row.select(".vacancy-card__date").first();
-                    Element dateTimeLink = dateTimeElement.child(0);
-                    String vacancyName = titleElement.text();
-                    String postLink = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
-                    String dateTime = String.format("%s", dateTimeLink.attr("datetime"));
-                    DateTimeParser parser = new HabrCareerDateTimeParser();
-                    LocalDateTime ldt = parser.parse(dateTime);
-                    HabrCareerParse habr = new HabrCareerParse(parser);
-                    String description = habr.retrieveDescription(postLink);
-                    list.add(new Post(vacancyName, postLink, description, ldt));
-                });
+                rows.forEach(row -> list.add(parsePost(row)));
             }
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             e.printStackTrace();
         }
         return list;
