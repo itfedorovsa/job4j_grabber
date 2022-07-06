@@ -15,6 +15,8 @@ import static org.quartz.TriggerBuilder.newTrigger;
 public class Grabber implements Grab {
     private final Properties cfg = new Properties();
 
+    private static final String SITE_LINK = "https://career.habr.com/vacancies/java_developer?page=";
+
     public Store store() {
         return new PsqlStore(cfg);
     }
@@ -56,7 +58,7 @@ public class Grabber implements Grab {
             JobDataMap map = context.getJobDetail().getJobDataMap();
             Store store = (Store) map.get("store");
             Parse parse = (Parse) map.get("parse");
-            List<Post> list = parse.list("https://career.habr.com/vacancies/java_developer?page=");
+            List<Post> list = parse.list(SITE_LINK);
             for (Post l : list) {
             store.save(l);
             }
