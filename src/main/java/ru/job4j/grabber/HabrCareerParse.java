@@ -34,9 +34,8 @@ public class HabrCareerParse implements Parse {
             Element desc = document.select(".collapsible-description__content").first();
             return desc.text();
         } catch (IOException e) {
-                e.printStackTrace();
+            throw new IllegalArgumentException("Something is wrong.");
         }
-        return "Description is missing";
     }
 
     private Post parsePost(Element element) {
@@ -48,8 +47,7 @@ public class HabrCareerParse implements Parse {
         String postLink = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
         String dateTime = String.format("%s", dateTimeLink.attr("datetime"));
         LocalDateTime ldt = dateTimeParser.parse(dateTime);
-        HabrCareerParse habr = new HabrCareerParse(dateTimeParser);
-        String description = habr.retrieveDescription(postLink);
+        String description = retrieveDescription(postLink);
         return new Post(vacancyName, postLink, description, ldt);
     }
 
@@ -64,8 +62,8 @@ public class HabrCareerParse implements Parse {
                 Elements rows = document.select(".vacancy-card__inner");
                 rows.forEach(row -> list.add(parsePost(row)));
             }
-        } catch (IOException | IllegalArgumentException e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Something is wrong.");
         }
         return list;
     }
