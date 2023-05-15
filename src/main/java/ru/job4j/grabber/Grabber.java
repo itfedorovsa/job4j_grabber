@@ -4,7 +4,9 @@ import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 import ru.job4j.grabber.utils.HabrCareerDateTimeParser;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
@@ -15,6 +17,12 @@ import static org.quartz.JobBuilder.newJob;
 import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
 
+/**
+ * Grabber class
+ *
+ * @author itfedorovsa (itfedorovsa@gmail.com)
+ * @version 1.0
+ */
 public class Grabber implements Grab {
     private final Properties cfg = new Properties();
 
@@ -30,12 +38,22 @@ public class Grabber implements Grab {
         return scheduler;
     }
 
+    /**
+     * Grabber configuration
+     *
+     * @throws IOException IOException
+     */
     public void cfg() throws IOException {
         try (InputStream in = Grabber.class.getClassLoader().getResourceAsStream("app.properties")) {
             cfg.load(in);
         }
     }
 
+    /**
+     * Receives data via the browser from the grabber
+     *
+     * @param store Store implementation. Type {@link ru.job4j.grabber.Store>}
+     */
     public void web(Store store) {
         new Thread(() -> {
             try (ServerSocket server = new ServerSocket(Integer.parseInt(cfg.getProperty("port")))) {
@@ -57,6 +75,14 @@ public class Grabber implements Grab {
         }).start();
     }
 
+    /**
+     * Init scheduler
+     *
+     * @param parse     Parse implementation. Type {@link ru.job4j.grabber.Parse>}
+     * @param store     Store implementation. Type {@link ru.job4j.grabber.Store>}
+     * @param scheduler Scheduler implementation. Type {@link org.quartz.Scheduler>}
+     * @throws SchedulerException SchedulerException
+     */
     @Override
     public void init(Parse parse, Store store, Scheduler scheduler) throws SchedulerException {
         JobDataMap data = new JobDataMap();
@@ -75,8 +101,16 @@ public class Grabber implements Grab {
         scheduler.scheduleJob(job, trigger);
     }
 
+    /**
+     * GrabJob static inner class
+     */
     public static class GrabJob implements Job {
 
+        /**
+         * Execute job
+         *
+         * @param context JobExecutionContext
+         */
         @Override
         public void execute(JobExecutionContext context) {
             JobDataMap map = context.getJobDetail().getJobDataMap();
@@ -84,11 +118,17 @@ public class Grabber implements Grab {
             Parse parse = (Parse) map.get("parse");
             List<Post> list = parse.list(SITE_LINK);
             for (Post l : list) {
-            store.save(l);
+                store.save(l);
             }
         }
     }
 
+    /**
+     * Main method
+     *
+     * @param args App arguments
+     * @throws Exception Exception
+     */
     public static void main(String[] args) throws Exception {
         Grabber grab = new Grabber();
         grab.cfg();
@@ -97,4 +137,5 @@ public class Grabber implements Grab {
         grab.init(new HabrCareerParse(new HabrCareerDateTimeParser()), store, scheduler);
         grab.web(store);
     }
+
 }

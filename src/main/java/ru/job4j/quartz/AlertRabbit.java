@@ -5,13 +5,22 @@ import org.quartz.impl.StdSchedulerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Properties;
 
-import static org.quartz.JobBuilder.*;
-import static org.quartz.TriggerBuilder.*;
-import static org.quartz.SimpleScheduleBuilder.*;
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
+import static org.quartz.TriggerBuilder.newTrigger;
 
+/**
+ * Scheduled task start class
+ *
+ * @author itfedorovsa (itfedorovsa@gmail.com)
+ * @version 1.0
+ */
 public class AlertRabbit {
 
     private static Properties getRabbitProperties() {
@@ -24,6 +33,13 @@ public class AlertRabbit {
         return properties;
     }
 
+    /**
+     * Get connection
+     *
+     * @param properties Properties. Type {@link java.util.Properties}
+     * @throws ClassNotFoundException ClassNotFoundException
+     * @throws SQLException           SQLException
+     */
     private static Connection getConnection(Properties properties) throws ClassNotFoundException, SQLException {
         Class.forName(properties.getProperty("jdbc.driver"));
         String url = properties.getProperty("jdbc.url");
@@ -32,6 +48,11 @@ public class AlertRabbit {
         return DriverManager.getConnection(url, login, password);
     }
 
+    /**
+     * Main method
+     *
+     * @param args App arguments
+     */
     public static void main(String[] args) {
         Properties properties = getRabbitProperties();
         try (Connection con = AlertRabbit.getConnection(properties)) {
@@ -57,12 +78,20 @@ public class AlertRabbit {
         }
     }
 
+    /**
+     * Rabbit static inner class
+     */
     public static class Rabbit implements Job {
 
         public Rabbit() {
             System.out.println(hashCode());
         }
 
+        /**
+         * Execute job
+         *
+         * @param context JobExecutionContext
+         */
         @Override
         public void execute(JobExecutionContext context) {
             System.out.println("Rabbit runs here ...");
@@ -75,4 +104,5 @@ public class AlertRabbit {
             }
         }
     }
+
 }

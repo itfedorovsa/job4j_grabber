@@ -13,31 +13,62 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * career.habr.com Parse implementation
+ *
+ * @author itfedorovsa (itfedorovsa@gmail.com)
+ * @version 1.0
+ */
 public class HabrCareerParse implements Parse {
 
+    /**
+     * Source link
+     */
     private static final String SOURCE_LINK = "https://career.habr.com";
 
+    /**
+     * Page link
+     */
     private static final String PAGE_LINK = String.format("%s/vacancies/java_developer?page=", SOURCE_LINK);
 
+    /**
+     * DateTimeParser
+     */
     private final DateTimeParser dateTimeParser;
 
+    /**
+     * Number of pages
+     */
     public static final int PAGE_COUNT = 5;
 
     public HabrCareerParse(DateTimeParser dateTimeParser) {
         this.dateTimeParser = dateTimeParser;
     }
 
+    /**
+     * Retrieve post description
+     *
+     * @param link Site link. Type {@link java.lang.String}
+     * @return Post description. Type {@link java.lang.String}
+     */
     private String retrieveDescription(String link) {
         try {
             Connection connection = Jsoup.connect(link);
             Document document = connection.get();
-            Element desc = document.select(".collapsible-description__content").first();
+            Element desc = document.select(".vacancy-description__text").first();
             return desc.text();
+
         } catch (IOException e) {
             throw new IllegalArgumentException("Something is wrong.");
         }
     }
 
+    /**
+     * Parse post
+     *
+     * @param element Element. Type {@link org.jsoup.nodes.Element}
+     * @return Post. Type {@link ru.job4j.grabber.Post}
+     */
     private Post parsePost(Element element) {
         Element titleElement = element.select(".vacancy-card__title").first();
         Element linkElement = titleElement.child(0);
@@ -51,6 +82,12 @@ public class HabrCareerParse implements Parse {
         return new Post(vacancyName, postLink, description, ldt);
     }
 
+    /**
+     * Create list of posts
+     *
+     * @param link Site link. Type {@link java.lang.String}
+     * @return List of Post. Type {@link java.util.List<ru.job4j.grabber.Post>}
+     */
     @Override
     public List<Post> list(String link) {
         List<Post> list = new ArrayList<>();
@@ -68,6 +105,11 @@ public class HabrCareerParse implements Parse {
         return list;
     }
 
+    /**
+     * Main method for career.habr.com
+     *
+     * @param args App arguments
+     */
     public static void main(String[] args) {
         HabrCareerParse parser = new HabrCareerParse(new HabrCareerDateTimeParser());
         List<Post> list = parser.list(PAGE_LINK);
@@ -75,4 +117,5 @@ public class HabrCareerParse implements Parse {
             System.out.println(l);
         }
     }
+
 }
